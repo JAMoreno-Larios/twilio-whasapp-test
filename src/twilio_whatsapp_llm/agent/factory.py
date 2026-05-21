@@ -46,10 +46,12 @@ def extract_text_from_message(message) -> str:
 
 
 def extract_reply_text(model_response: dict) -> str:
-    ai_messages = [
-        message
-        for message in model_response["messages"]
-        if isinstance(message, AIMessage)
-    ]
-    ai_text = [extract_text_from_message(message) for message in ai_messages]
-    return "\n".join(ai_text)
+    """Return only the latest assistant message for this turn.
+
+    With a checkpointer, model_response["messages"] is the full thread history.
+    Sending every AIMessage would repeat all prior replies to the user.
+    """
+    for message in reversed(model_response["messages"]):
+        if isinstance(message, AIMessage):
+            return extract_text_from_message(message)
+    return ""
